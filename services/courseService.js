@@ -19,6 +19,33 @@ class courseService {
       );
     }
   }
+
+  async createCourse(req, res) {
+    try {
+      const { title, description, category, createdBy } = req.body;
+      const createCourse = await this.courseRepository.createCourse(
+        {
+          title,
+          description,
+          category,
+          createdBy,
+          poster: {
+            poster_id: "abcd",
+            url: "xyz",
+          },
+        },
+        res
+      );
+      return createCourse;
+    } catch (error) {
+      if (error.message == "Repository Error") throw error;
+      throw new ServiceError(
+        "Service Error",
+        "Failed to retrieve courses",
+        500
+      );
+    }
+  }
 }
 
 export default courseService;

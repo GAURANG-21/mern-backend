@@ -31,6 +31,35 @@ const getAllCourses = async (req, res) => {
   }
 };
 
+const createCourse = async (req, res) => {
+  try {
+    await courseService.createCourse(req, res);
+    res.status(StatusCodes.CREATED).json({
+      success: true,
+      message: "Course created successfully",
+      err: {},
+    });
+  } catch (error) {
+    if (error.message == "Repository Error" || error.message == "Service Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: { error },
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to create course",
+        error: new AppError(
+          "Something went wrong",
+          "Try finding error in creating course pathway",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        ),
+      });
+  }
+};
+
 export default {
   getAllCourses,
+  createCourse,
 };
