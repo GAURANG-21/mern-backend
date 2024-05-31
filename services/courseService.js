@@ -1,21 +1,24 @@
-import {CourseRepository} from '../repository/index.js'
+import { CourseRepository } from "../repository/index.js";
+import ServiceError from "../utils/serviceError.js";
 
+class courseService {
+  constructor() {
+    this.courseRepository = new CourseRepository();
+  }
 
-class courseService{
-    constructor(){
-        this.courseRepository = new CourseRepository();
+  async getAllCourses(req, res) {
+    try {
+      const courses = await this.courseRepository.getAllCourses(req, res);
+      return courses;
+    } catch (error) {
+      if (error.message == "Repository Error") throw error;
+      throw new ServiceError(
+        "Service Error",
+        "Failed to retrieve courses",
+        500
+      );
     }
-
-    async getAllCourses(req, res){
-        try {
-            console.log("Service layer is working fine")
-            const courses = await this.courseRepository.getAllCourses(req, res);
-            return courses;
-        } catch (error) {
-            console.log("Error in the service layer")
-            throw {error}
-        }
-    }
+  }
 }
 
-export default courseService
+export default courseService;

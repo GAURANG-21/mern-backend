@@ -1,7 +1,9 @@
-import dotenv from 'dotenv'
+import dotenv from "dotenv";
 dotenv.config();
 
-export default {
-    // Add your environment variables here
-    'PORT' : `${process.env.PORT}`
-}
+const env_variables = {
+  PORT: `${process.env.PORT}`,
+  MONGO_URI: `${process.env.MONGO_URI}`,
+};
+
+export default env_variables;

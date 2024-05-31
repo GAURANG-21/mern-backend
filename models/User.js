@@ -1,62 +1,62 @@
-import mongoose from 'mongoose'
-import validator from 'email-validator'
+import mongoose from "mongoose";
+import validator from "email-validator";
 
 const user_schema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, "Please enter your name."]
+  name: {
+    type: String,
+    required: [true, "Please enter your name."],
+  },
+  email: {
+    type: String,
+    required: [true, "Please enter your email."],
+    unique: true,
+    validator: validator.validate(),
+  },
+  password: {
+    type: String,
+    required: [true, "Please enter your password."],
+    minLength: [6, "Create password of atleast 6 characters."],
+    select: false,
+  },
+  role: {
+    type: String,
+    enum: ["admin", "user"],
+    default: "user",
+  },
+  avatar: {
+    public_id: {
+      type: String,
+      required: true,
     },
-    email: {
-        type: String,
-        required: [true,"Please enter your email."],
-        unique: true,
-        validator: validator.validate()
+    url: {
+      type: String,
+      required: true,
     },
-    password:{
-        type: String,
-        required: [true,"Please enter your password."],
-        minLength: [6,"Create password of atleast 6 characters."],
-        select: false
+  },
+  //*To be taken from RazorPay
+  subscription: {
+    id: String,
+    status: String,
+  },
+  //*Just like youtube play list. It has array of courses.
+  //*Playlist --> Courses --> Lectures̥
+  playlist: [
+    {
+      course: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course",
+      },
+      poster: String,
     },
-    role:{
-        type: String,
-        enum: ['admin', 'user'],
-        default: 'user'
-    },
-    avatar:{
-        public_id: {
-            type: String, 
-            required: true
-        },
-        url: {
-            type: String, 
-            required: true
-        }
-    },
-    //*To be taken from RazorPay
-    subscription:{
-        id: String, 
-        status: String
-    },
-    //*Just like youtube play list. It has array of courses.
-    //*Playlist --> Courses --> Lectures̥
-    playlist:[
-        {
-            course: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Course"
-            },
-            poster: String
-        }
-    ], 
-    createdAt:{
-        type: Date,
-        default: Date.now()
-    }, 
-    ResetPasswordToken: String,
-    ResetPasswordExpire: String
-})
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+  ResetPasswordToken: String,
+  ResetPasswordExpire: String,
+});
 
-const User = mongoose.Model('User', user_schema);
+const User = await mongoose.Model("User", user_schema);
 
-module.exports = User
+export { User };
