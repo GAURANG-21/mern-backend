@@ -1,5 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import validator from "email-validator";
+import jwt from "jsonwebtoken";
 
 const user_schema = new mongoose.Schema({
   name: {
@@ -10,7 +11,10 @@ const user_schema = new mongoose.Schema({
     type: String,
     required: [true, "Please enter your email."],
     unique: true,
-    validator: validator.validate(),
+    validate: {
+      validator: validator.validate,
+      message: "Please enter a valid email address."
+    },
   },
   password: {
     type: String,
@@ -57,6 +61,10 @@ const user_schema = new mongoose.Schema({
   ResetPasswordExpire: String,
 });
 
-const User = await mongoose.Model("User", user_schema);
-
+user_schema.methods.getJWTtoken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY, {
+    expiresIn: "15d",
+  });
+};
+const User = await mongoose.model("User", user_schema);
 export { User };
