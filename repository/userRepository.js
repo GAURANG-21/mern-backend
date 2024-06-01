@@ -25,6 +25,40 @@ class UserRepository {
       );
     }
   }
+
+  async login(req, res) {
+    try {
+      const { email, password } = req;
+      const user = await User.findOne({ email }).select("+password");
+      if (!user)
+        return {
+          "User doesn't exist": new AppError(
+            "Repository Error",
+            "User doesn't exist",
+            StatusCodes.UNAUTHORIZED
+          ),
+        };
+
+      const password_Verification = await user.comparePasswords(password);
+      if (!password_Verification)
+        return {
+          "Password doesn't match": new AppError(
+            "Repository Error",
+            "Password doesn't match",
+            StatusCodes.UNAUTHORIZED
+          ),
+        };
+
+      return user;
+    } catch (error) {
+      console.log(error);
+      throw new AppError(
+        "Repository Error",
+        "There is an error in the repository layer",
+        StatusCodes.BAD_GATEWAY
+      );
+    }
+  }
 }
 
 export default UserRepository;

@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import validator from "email-validator";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 const user_schema = new mongoose.Schema({
   name: {
@@ -13,7 +14,7 @@ const user_schema = new mongoose.Schema({
     unique: true,
     validate: {
       validator: validator.validate,
-      message: "Please enter a valid email address."
+      message: "Please enter a valid email address.",
     },
   },
   password: {
@@ -66,5 +67,18 @@ user_schema.methods.getJWTtoken = function () {
     expiresIn: "15d",
   });
 };
+
+user_schema.methods.comparePasswords = function (password) {
+  return bcrypt.compareSync(password, this.password);
+};
+
+// * Before saving the passwords to the datasave, hash them.
+// ! Not necessary to create a instance method for this.
+
+user_schema.pre("save", async function () {
+  if (this.isModified("password"))
+    this.password = await bcrypt.hashSync(this.password, 10);
+});
+
 const User = await mongoose.model("User", user_schema);
 export { User };

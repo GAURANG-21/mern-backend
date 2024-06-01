@@ -9,6 +9,7 @@ class ServiceError extends Error {
     statusCode = StatusCodes.INTERNAL_SERVER_ERROR
   ) {
     super(message);
+    this.explaination = explaination,
     this.statusCode = statusCode;
   }
 }

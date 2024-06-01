@@ -2,14 +2,16 @@ import express from "express";
 import bodyParser from "body-parser";
 import config from "./config/config.js";
 import routerCourse from "./routes/courseRoutes.js";
-import routerUser from "./routes/userRoutes.js"
+import routerUser from "./routes/userRoutes.js";
 import { connectDB } from "./config/database.js";
+import cookieParser from "cookie-parser";
 
 //* Making successful connection with database
 connectDB();
 
 const app = express();
 
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/v1", routerCourse);
