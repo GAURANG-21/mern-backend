@@ -143,4 +143,33 @@ const getMyProfile = async (req, res) => {
   }
 };
 
-export { register, login, logout, getMyProfile };
+const updateProfile = async (req, res) => {
+  try {
+    const updated_user = await userService.updateProfile(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "User updated successfully",
+      updated_user,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error" || error.message == "Service Error" || error.message == "No changes")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.CONFLICT).json({
+        success: false,
+        message: "Something went wrong",
+        error: error,
+        err: new AppError(
+          "Something went wrong",
+          "Try finding error in creating user register pathway",
+          StatusCodes.CONFLICT
+        ),
+      });
+  }
+};
+
+export { register, login, logout, getMyProfile, updateProfile };

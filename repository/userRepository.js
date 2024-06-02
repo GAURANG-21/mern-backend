@@ -72,6 +72,34 @@ class UserRepository {
       );
     }
   }
+
+  async updateProfile(req, res) {
+    try {
+      const user = await User.findById(req.user_id);
+      if (req.body.name == user.name || req.body.email == user.email)
+        {
+          throw new AppError(
+          "No changes",
+          "No changes provided in user details",
+          StatusCodes.CONFLICT
+        );
+      }
+      else {
+        if (req.body.name) user.name = req.body.name;
+        if (req.body.email) user.email = req.body.email;
+        await user.save();
+        return user;
+      }
+    } catch (error) {
+      if(error.message == "No changes") throw error;
+      else
+      throw new AppError(
+        "Repository Error",
+        "Couldn't update the profile",
+        StatusCodes.CONFLICT
+      );
+    }
+  }
 }
 
 export default UserRepository;

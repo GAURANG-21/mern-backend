@@ -35,4 +35,19 @@ const loginValidation = (req, res, next) => {
   else next();
 };
 
-export { registerValidation, loginValidation };
+const updateProfileValidation = (req, res, next) =>{
+  const { email, name } = req.body;
+  if (!email && !name)
+    res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message: "Please fill out all fields",
+      err: new ValidationError(
+        "Validation Error",
+        "Please fill out all fields",
+        StatusCodes.BAD_REQUEST
+      ),
+    });
+  else next();
+}
+
+export { registerValidation, loginValidation, updateProfileValidation };

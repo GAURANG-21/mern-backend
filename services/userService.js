@@ -51,6 +51,20 @@ class UserService {
       );
     }
   }
+
+  async updateProfile(req, res) {
+    try {
+      const updated_user = await this.userRepository.updateProfile(req, res);
+      return updated_user;
+    } catch (error) {
+      if (error.message == "Repository Error" || error.message == "No changes")  throw error;
+        throw new ServiceError(
+          "Service Error",
+          "Failed to update user profile",
+          StatusCodes.CONFLICT
+        );
+    }
+  }
 }
 
 export default UserService;
