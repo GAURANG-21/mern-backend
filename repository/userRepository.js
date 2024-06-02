@@ -59,6 +59,19 @@ class UserRepository {
       );
     }
   }
+
+  async getMyProfile(req, res) {
+    try {
+      const user = await User.findById(req).select("+password");
+      return user;
+    } catch (error) {
+      throw new AppError(
+        "Repository Error",
+        "Unable to fetch user's profile",
+        StatusCodes.EXPECTATION_FAILED
+      );
+    }
+  }
 }
 
 export default UserRepository;

@@ -114,4 +114,33 @@ const logout = async (req, res) => {
   }
 };
 
-export { register, login, logout };
+const getMyProfile = async (req, res) => {
+  try {
+    const user = await userService.getMyProfile(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "User fetched successfully",
+      user,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error" || error.message == "Service Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Something went wrong",
+        error: error,
+        err: new AppError(
+          "Something went wrong",
+          "Try finding error in creating user register pathway",
+          StatusCodes.EXPECTATION_FAILED
+        ),
+      });
+  }
+};
+
+export { register, login, logout, getMyProfile };
