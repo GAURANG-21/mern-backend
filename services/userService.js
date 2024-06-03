@@ -65,6 +65,35 @@ class UserService {
         );
     }
   }
+
+  async forgetPassword(req, res){
+    try {
+      const {token} = req.user_id;
+      const user = await this.userRepository.forgetPassword({token: token, email: req.body.email}, res);
+      return user;
+    } catch (error) {
+      if(error.message == "Repository Error") throw error;
+      throw ServiceError(
+        "Service Error",
+        "Email didn't work",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    }
+  }
+
+  async resetPassword(req, res){
+    try {
+      const user = await this.userRepository.resetPassword(req, res);
+      return user;
+    } catch (error) {
+      if(error.message == "Repository Error") throw error;
+      throw ServiceError(
+        "Service Error",
+        "Email didn't work",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    }
+  }
 }
 
 export default UserService;

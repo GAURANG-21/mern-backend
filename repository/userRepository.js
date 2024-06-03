@@ -1,6 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import { User } from "../models/User.js";
 import AppError from "../utils/appError.js";
+import { sendEmail } from "../middlewares/sendEmail.js";
+import crypto from "crypto";
 
 class UserRepository {
   async register(req, res) {
@@ -76,27 +78,98 @@ class UserRepository {
   async updateProfile(req, res) {
     try {
       const user = await User.findById(req.user_id);
-      if (req.body.name == user.name || req.body.email == user.email)
-        {
-          throw new AppError(
+      if (req.body.name == user.name || req.body.email == user.email) {
+        throw new AppError(
           "No changes",
           "No changes provided in user details",
           StatusCodes.CONFLICT
         );
-      }
-      else {
+      } else {
         if (req.body.name) user.name = req.body.name;
         if (req.body.email) user.email = req.body.email;
         await user.save();
         return user;
       }
     } catch (error) {
-      if(error.message == "No changes") throw error;
+      if (error.message == "No changes") throw error;
       else
+        throw new AppError(
+          "Repository Error",
+          "Couldn't update the profile",
+          StatusCodes.CONFLICT
+        );
+    }
+  }
+
+  async forgetPassword(req, res) {
+    try {
+      const { email, token } = req;
+      const user = await User.findOne({ email });
+
+      if (!user)
+        throw AppError(
+          "Repository Error",
+          "User not found",
+          StatusCodes.BAD_REQUEST
+        );
+
+      const resetToken = await user.getResetToken();
+      
+      const url = `process.env.FRONTEND_URL/resetPassword/${resetToken}`;
+      const message = `Reset token has been sent to ${email}. Click on the URL ${url} to reset your password`;
+      await sendEmail(user.email, "CourseUp Reset Password", message);
+      await user.save();
+
+      return user;
+    } catch (error) {
+      console.log(error)
       throw new AppError(
         "Repository Error",
-        "Couldn't update the profile",
-        StatusCodes.CONFLICT
+        "Error while sending email",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async resetPassword(req, res) {
+    try {
+      const { token } = req.params;
+      const { password, updatePassword } = req.body;
+      const ResetPasswordToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+        const user = await User.findOne({
+          ResetPasswordToken,
+          ResetPasswordExpire: { $gt: Date.now() },
+        }).select("+password");
+        
+        if (!user)
+          throw new AppError(
+        "Repository Error",
+        "Invalid token or token has expired!",
+        StatusCodes.UNAUTHORIZED
+      );
+      const isMatch = await user.comparePasswords(password);
+      console.log(isMatch)
+      if (!isMatch)
+        throw AppError(
+      "Repository Error",
+      "Password is incorrect",
+      StatusCodes.UNAUTHORIZED
+    );
+      user.password = updatePassword;
+      user.ResetPasswordToken = undefined;
+      user.ResetPasswordExpire= undefined;
+      await user.save();
+      return user;
+    } catch (error) {
+      if (error.message == "Repository Error") throw error;
+      throw new AppError(
+        "Repository Error",
+        "Something went wrong while resetting the password",
+        StatusCodes.INTERNAL_SERVER_ERROR
       );
     }
   }

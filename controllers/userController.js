@@ -152,7 +152,11 @@ const updateProfile = async (req, res) => {
       updated_user,
     });
   } catch (error) {
-    if (error.message == "Repository Error" || error.message == "Service Error" || error.message == "No changes")
+    if (
+      error.message == "Repository Error" ||
+      error.message == "Service Error" ||
+      error.message == "No changes"
+    )
       res.status(error.statusCode).json({
         success: false,
         message: error.message,
@@ -172,4 +176,60 @@ const updateProfile = async (req, res) => {
   }
 };
 
-export { register, login, logout, getMyProfile, updateProfile };
+const forgetPassword = async (req, res) => {
+  try {
+    const user = await userService.forgetPassword(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Password reset link sent successfully",
+      user,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error" || error.message == "Service Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to send the link",
+        err: error,
+      });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const user = await userService.resetPassword(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Password reset link sent successfully",
+      user,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error" || error.message == "Service Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to reset the password",
+        err: error,
+      });
+  }
+};
+
+export {
+  register,
+  login,
+  logout,
+  getMyProfile,
+  updateProfile,
+  forgetPassword,
+  resetPassword,
+};

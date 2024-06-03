@@ -9,7 +9,9 @@ import {
   register,
   logout,
   getMyProfile,
-  updateProfile
+  updateProfile,
+  forgetPassword,
+  resetPassword
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
@@ -20,5 +22,7 @@ router.route("/login").post(loginValidation, login);
 router.route("/logout").post(logout);
 router.route("/me").get(isAuthenticated, getMyProfile);
 router.route("/updateProfile").put(isAuthenticated, updateProfileValidation, updateProfile);
+router.route("/forgetPassword").post(isAuthenticated, forgetPassword)
+router.route("/resetPassword/:token").put(isAuthenticated, resetPassword)
 
 export default router;
