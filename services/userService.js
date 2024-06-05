@@ -57,41 +57,93 @@ class UserService {
       const updated_user = await this.userRepository.updateProfile(req, res);
       return updated_user;
     } catch (error) {
-      if (error.message == "Repository Error" || error.message == "No changes")  throw error;
+      if (error.message == "Repository Error" || error.message == "No changes")
+        throw error;
+      throw new ServiceError(
+        "Service Error",
+        "Failed to update user profile",
+        StatusCodes.CONFLICT
+      );
+    }
+  }
+
+  // async forgetPassword(req, res){
+  //   try {
+  //     const {token} = req.user_id;
+  //     const user = await this.userRepository.forgetPassword({token: token, email: req.body.email}, res);
+  //     return user;
+  //   } catch (error) {
+  //     if(error.message == "Repository Error") throw error;
+  //     throw ServiceError(
+  //       "Service Error",
+  //       "Email didn't work",
+  //       StatusCodes.INTERNAL_SERVER_ERROR
+  //     )
+  //   }
+  // }
+
+  // async resetPassword(req, res){
+  //   try {
+  //     const user = await this.userRepository.resetPassword(req, res);
+  //     return user;
+  //   } catch (error) {
+  //     if(error.message == "Repository Error") throw error;
+  //     throw ServiceError(
+  //       "Service Error",
+  //       "Email didn't work",
+  //       StatusCodes.INTERNAL_SERVER_ERROR
+  //     )
+  //   }
+  // }
+
+  async forgetPassword(req, res) {
+    try {
+      const { email } = req.body;
+      if (!email)
+        throw new AppError(
+          "Service Error",
+          "Email not found",
+          StatusCodes.BAD_REQUEST
+        );
+      const user = await this.userRepository.forgetPassword(email, res);
+      return user;
+    } catch (error) {
+      if (error.message == "Repository Error") throw error;
+      else
         throw new ServiceError(
           "Service Error",
-          "Failed to update user profile",
-          StatusCodes.CONFLICT
+          "Failed to send password reset email",
+          StatusCodes.INTERNAL_SERVER_ERROR
         );
     }
   }
 
-  async forgetPassword(req, res){
+  async resetPassword(req, res) {
     try {
-      const {token} = req.user_id;
-      const user = await this.userRepository.forgetPassword({token: token, email: req.body.email}, res);
+      const { token } = req.params;
+      const { updatedPassword } = req.body;
+      if (!updatedPassword)
+        throw new AppError(
+          "Service Error",
+          "New password not found",
+          StatusCodes.BAD_REQUEST
+        );
+      const user = await this.userRepository.resetPassword(
+        { token, updatedPassword },
+        res
+      );
       return user;
     } catch (error) {
-      if(error.message == "Repository Error") throw error;
-      throw ServiceError(
-        "Service Error",
-        "Email didn't work",
-        StatusCodes.INTERNAL_SERVER_ERROR
+      if (
+        error.message == "Repository Error" ||
+        error.message == "Service Error"
       )
-    }
-  }
-
-  async resetPassword(req, res){
-    try {
-      const user = await this.userRepository.resetPassword(req, res);
-      return user;
-    } catch (error) {
-      if(error.message == "Repository Error") throw error;
-      throw ServiceError(
+        throw error;
+      throw new ServiceError(
         "Service Error",
-        "Email didn't work",
+        "Failed to reset password",
         StatusCodes.INTERNAL_SERVER_ERROR
-      )
+      );
     }
   }
 }

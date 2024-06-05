@@ -101,75 +101,130 @@ class UserRepository {
     }
   }
 
+  // async forgetPassword(req, res) {
+  //   try {
+  //     const { email, token } = req;
+  //     const user = await User.findOne({ email });
+
+  //     if (!user)
+  //       throw AppError(
+  //         "Repository Error",
+  //         "User not found",
+  //         StatusCodes.BAD_REQUEST
+  //       );
+
+  //     const resetToken = await user.getResetToken();
+
+  //     const url = `process.env.FRONTEND_URL/resetPassword/${resetToken}`;
+  //     const message = `Reset token has been sent to ${email}. Click on the URL ${url} to reset your password`;
+  //     await sendEmail(user.email, "CourseUp Reset Password", message);
+  //     await user.save();
+
+  //     return user;
+  //   } catch (error) {
+  //     console.log(error)
+  //     throw new AppError(
+  //       "Repository Error",
+  //       "Error while sending email",
+  //       StatusCodes.INTERNAL_SERVER_ERROR
+  //     );
+  //   }
+  // }
+  // async resetPassword(req, res) {
+  //   try {
+  //     const { token } = req.params;
+  //     const { password, updatePassword } = req.body;
+  //     const ResetPasswordToken = crypto
+  //       .createHash("sha256")
+  //       .update(token)
+  //       .digest("hex");
+
+  //       const user = await User.findOne({
+  //         ResetPasswordToken,
+  //         ResetPasswordExpire: { $gt: Date.now() },
+  //       }).select("+password");
+
+  //       if (!user)
+  //         throw new AppError(
+  //       "Repository Error",
+  //       "Invalid token or token has expired!",
+  //       StatusCodes.UNAUTHORIZED
+  //     );
+  //     const isMatch = await user.comparePasswords(password);
+  //     console.log(isMatch)
+  //     if (!isMatch)
+  //       throw AppError(
+  //     "Repository Error",
+  //     "Password is incorrect",
+  //     StatusCodes.UNAUTHORIZED
+  //   );
+  //     user.password = updatePassword;
+  //     user.ResetPasswordToken = undefined;
+  //     user.ResetPasswordExpire= undefined;
+  //     await user.save();
+  //     return user;
+  //   } catch (error) {
+  //     if (error.message == "Repository Error") throw error;
+  //     throw new AppError(
+  //       "Repository Error",
+  //       "Something went wrong while resetting the password",
+  //       StatusCodes.INTERNAL_SERVER_ERROR
+  //     );
+  //   }
+  // }
+
   async forgetPassword(req, res) {
     try {
-      const { email, token } = req;
-      const user = await User.findOne({ email });
-
+      console.log(req);
+      const user = await User.findOne({ email: req });
       if (!user)
-        throw AppError(
+        throw new AppError(
           "Repository Error",
-          "User not found",
+          "No such user with email id found!",
           StatusCodes.BAD_REQUEST
         );
-
       const resetToken = await user.getResetToken();
-      
-      const url = `process.env.FRONTEND_URL/resetPassword/${resetToken}`;
-      const message = `Reset token has been sent to ${email}. Click on the URL ${url} to reset your password`;
-      await sendEmail(user.email, "CourseUp Reset Password", message);
       await user.save();
 
+      const url = `${process.env.FRONTEND_URL}/resetPassword/${resetToken}`;
+      const message = `Please reset your password using the url ${url}. If it wasn't you, please ignore.`;
+
+      await sendEmail(req, "Change your CourseUp Password", message);
       return user;
     } catch (error) {
-      console.log(error)
-      throw new AppError(
-        "Repository Error",
-        "Error while sending email",
-        StatusCodes.INTERNAL_SERVER_ERROR
-      );
+      if (error.message == "Repository Error") throw error;
+      else
+        throw new AppError(
+          "Repository Error",
+          "Something went wrong while sending reset password link",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
     }
   }
 
   async resetPassword(req, res) {
     try {
-      const { token } = req.params;
-      const { password, updatePassword } = req.body;
+      const { token, updatedPassword } = req;
       const ResetPasswordToken = crypto
         .createHash("sha256")
         .update(token)
         .digest("hex");
+      const user = await User.findOne({
+        ResetPasswordToken,
+        ResetPasswordExpire: { $gt: Date.now() },
+      }).select("+password");
 
-        const user = await User.findOne({
-          ResetPasswordToken,
-          ResetPasswordExpire: { $gt: Date.now() },
-        }).select("+password");
-        
-        if (!user)
-          throw new AppError(
-        "Repository Error",
-        "Invalid token or token has expired!",
-        StatusCodes.UNAUTHORIZED
-      );
-      const isMatch = await user.comparePasswords(password);
-      console.log(isMatch)
-      if (!isMatch)
-        throw AppError(
-      "Repository Error",
-      "Password is incorrect",
-      StatusCodes.UNAUTHORIZED
-    );
-      user.password = updatePassword;
+      user.password = updatedPassword;
       user.ResetPasswordToken = undefined;
-      user.ResetPasswordExpire= undefined;
+      user.ResetPasswordExpire = undefined;
       await user.save();
+
       return user;
     } catch (error) {
-      if (error.message == "Repository Error") throw error;
       throw new AppError(
         "Repository Error",
-        "Something went wrong while resetting the password",
-        StatusCodes.INTERNAL_SERVER_ERROR
+        "Invalid or expired token. Please try again",
+        StatusCodes.BAD_REQUEST
       );
     }
   }

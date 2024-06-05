@@ -176,9 +176,13 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// Forget Password -> set 'ResetToken' and 'ResetTokenExpiry'
+//                 -> send Email
+//                 -> Receive user
+
 const forgetPassword = async (req, res) => {
   try {
-    const user = await userService.forgetPassword(req, res);
+    const user = await userService.forgetPassword(req.body, res);
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Password reset link sent successfully",
@@ -200,12 +204,16 @@ const forgetPassword = async (req, res) => {
   }
 };
 
+//Reset Password -> Will receive 'ResetPasswordToken' from params and verify by decrpyting.
+//               -> Receive a user based on 'ResetPasswordToken' and 'ResetPasswordTokenExpiry'.
+//               -> If true, change the password and return the user.
+
 const resetPassword = async (req, res) => {
   try {
     const user = await userService.resetPassword(req, res);
     res.status(StatusCodes.OK).json({
       success: true,
-      message: "Password reset link sent successfully",
+      message: "Password reset successfully",
       user,
     });
   } catch (error) {
