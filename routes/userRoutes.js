@@ -3,6 +3,7 @@ import {
   registerValidation,
   loginValidation,
   updateProfileValidation,
+  addToPlaylistValidation,
 } from "../middlewares/users_validation.js";
 import {
   login,
@@ -12,6 +13,8 @@ import {
   updateProfile,
   forgetPassword,
   resetPassword,
+  addToPlaylist,
+  removeFromPlaylist,
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
@@ -30,5 +33,14 @@ router
 //! I will be having no token neither will I be able to access forgetPassword.
 router.route("/forgetPassword").post(forgetPassword);
 router.route("/resetPassword/:token").put(resetPassword);
+
+router
+  .route("/addToPlaylist")
+  .post(isAuthenticated, addToPlaylistValidation, addToPlaylist);
+router
+  .route("/removeFromPlaylist")
+  .delete(isAuthenticated, addToPlaylistValidation, removeFromPlaylist);
+
+
 
 export default router;

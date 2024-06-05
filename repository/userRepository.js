@@ -1,8 +1,10 @@
 import { StatusCodes } from "http-status-codes";
 import { User } from "../models/User.js";
+import {Course} from "../models/Course.js"
 import AppError from "../utils/appError.js";
 import { sendEmail } from "../middlewares/sendEmail.js";
 import crypto from "crypto";
+import mongoose from "mongoose";
 
 class UserRepository {
   async register(req, res) {
@@ -101,78 +103,6 @@ class UserRepository {
     }
   }
 
-  // async forgetPassword(req, res) {
-  //   try {
-  //     const { email, token } = req;
-  //     const user = await User.findOne({ email });
-
-  //     if (!user)
-  //       throw AppError(
-  //         "Repository Error",
-  //         "User not found",
-  //         StatusCodes.BAD_REQUEST
-  //       );
-
-  //     const resetToken = await user.getResetToken();
-
-  //     const url = `process.env.FRONTEND_URL/resetPassword/${resetToken}`;
-  //     const message = `Reset token has been sent to ${email}. Click on the URL ${url} to reset your password`;
-  //     await sendEmail(user.email, "CourseUp Reset Password", message);
-  //     await user.save();
-
-  //     return user;
-  //   } catch (error) {
-  //     console.log(error)
-  //     throw new AppError(
-  //       "Repository Error",
-  //       "Error while sending email",
-  //       StatusCodes.INTERNAL_SERVER_ERROR
-  //     );
-  //   }
-  // }
-  // async resetPassword(req, res) {
-  //   try {
-  //     const { token } = req.params;
-  //     const { password, updatePassword } = req.body;
-  //     const ResetPasswordToken = crypto
-  //       .createHash("sha256")
-  //       .update(token)
-  //       .digest("hex");
-
-  //       const user = await User.findOne({
-  //         ResetPasswordToken,
-  //         ResetPasswordExpire: { $gt: Date.now() },
-  //       }).select("+password");
-
-  //       if (!user)
-  //         throw new AppError(
-  //       "Repository Error",
-  //       "Invalid token or token has expired!",
-  //       StatusCodes.UNAUTHORIZED
-  //     );
-  //     const isMatch = await user.comparePasswords(password);
-  //     console.log(isMatch)
-  //     if (!isMatch)
-  //       throw AppError(
-  //     "Repository Error",
-  //     "Password is incorrect",
-  //     StatusCodes.UNAUTHORIZED
-  //   );
-  //     user.password = updatePassword;
-  //     user.ResetPasswordToken = undefined;
-  //     user.ResetPasswordExpire= undefined;
-  //     await user.save();
-  //     return user;
-  //   } catch (error) {
-  //     if (error.message == "Repository Error") throw error;
-  //     throw new AppError(
-  //       "Repository Error",
-  //       "Something went wrong while resetting the password",
-  //       StatusCodes.INTERNAL_SERVER_ERROR
-  //     );
-  //   }
-  // }
-
   async forgetPassword(req, res) {
     try {
       console.log(req);
@@ -226,6 +156,58 @@ class UserRepository {
         "Invalid or expired token. Please try again",
         StatusCodes.BAD_REQUEST
       );
+    }
+  }
+
+  async addToPlaylist(req, res) {
+    try {
+      const user = await User.findById(req.user_id);
+      if(!user) throw new AppError("Repository Error", "User not found!", StatusCodes.BAD_REQUEST);
+      
+      const course = await Course.findById(req.body.id);
+      if(!course) throw new AppError("Repository Error", "Course not found!", StatusCodes.BAD_REQUEST);
+
+      const inPlaylist = user.playlist.find((currentValue)=>{
+        if(currentValue.course.toString()===course._id.toString()) return true;
+      } )
+
+      if(inPlaylist) throw new AppError("Repository Error", "Already In playlist", StatusCodes.BAD_REQUEST);
+      
+      user.playlist.push({
+        course: course._id,
+        poster: course.poster.url
+      });
+      
+      await user.save();
+  
+      return user;
+    } catch (error) {
+      if(error.message == "Repository Error") throw error;
+      else
+      throw new AppError("Repository Error", "Unable to add the course to playlist", StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+
+  async removeFromPlaylist (req, res) {
+    try {
+      const user = await User.findById(req.user_id);
+      if(!user) throw new AppError("Repository Error", "User not found!", StatusCodes.BAD_REQUEST);
+      
+      const course = await Course.findById(req.body.id);
+      if(!course) throw new AppError("Repository Error", "Course not found!", StatusCodes.BAD_REQUEST);
+
+      const newPlaylist = user.playlist.filter((item)=>{
+        if(item.course.toString()!==course._id.toString()) return item;
+      })
+
+      user.playlist = newPlaylist;
+      await user.save();
+      return user;
+    } catch (error) {
+      if(error.message == "Repository Error") throw error;
+      else
+      throw new AppError("Repository Error", "Unable to remove the course from playlist", StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
 }

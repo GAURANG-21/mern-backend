@@ -146,6 +146,25 @@ class UserService {
       );
     }
   }
+
+  async addToPlaylist(req, res) {
+    try {
+      const user = await this.userRepository.addToPlaylist(req, res)
+      return user;
+      
+    } catch (error) {
+      throw error;
+    }
+  }
+  async removeFromPlaylist(req, res) {
+    try {
+      const user = await this.userRepository.removeFromPlaylist(req, res)
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
 export default UserService;

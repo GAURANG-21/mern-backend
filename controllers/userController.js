@@ -232,6 +232,53 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const addToPlaylist = async (req, res) => {
+  try {
+    const user = await userService.addToPlaylist(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Added to playlist successfully",
+      user,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error")
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to add to playlist",
+        err: error,
+      });
+  }
+};
+const removeFromPlaylist = async (req, res) => {
+  try {
+    const user = await userService.removeFromPlaylist(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Removed from playlist successfully",
+      user,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error")
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to remove from playlist",
+        err: error,
+      });
+  }
+};
+
 export {
   register,
   login,
@@ -240,4 +287,6 @@ export {
   updateProfile,
   forgetPassword,
   resetPassword,
+  addToPlaylist,
+  removeFromPlaylist
 };

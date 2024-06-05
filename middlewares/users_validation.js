@@ -50,4 +50,19 @@ const updateProfileValidation = (req, res, next) =>{
   else next();
 }
 
-export { registerValidation, loginValidation, updateProfileValidation };
+const addToPlaylistValidation = (req, res, next) =>{
+  const {id} = req.body;
+  if(!id) res.status(StatusCodes.BAD_GATEWAY).json({
+    success: false,
+    message: "Please provide course_id",
+    err: new ValidationError(
+      "Validation Error",
+      "Please provide course_id",
+      StatusCodes.BAD_GATEWAY
+    )});
+    else 
+    next();
+  }
+
+
+export { registerValidation, loginValidation, updateProfileValidation, addToPlaylistValidation };
