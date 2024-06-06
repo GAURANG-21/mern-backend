@@ -33,6 +33,7 @@ const getAllCourses = async (req, res) => {
 
 const createCourse = async (req, res) => {
   try {
+    console.log(req.body);
     await courseService.createCourse(req, res);
     res.status(StatusCodes.CREATED).json({
       success: true,
@@ -59,7 +60,60 @@ const createCourse = async (req, res) => {
   }
 };
 
-export default {
-  getAllCourses,
-  createCourse,
+const getCourseLectures = async (req, res) => {
+  try {
+    const lectures = await courseService.getCourseLectures(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "All lectures fetched successfully",
+      data: lectures,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to fetch lectures",
+        error: new AppError(
+          "Something went wrong",
+          "Try finding error in fetching lectures",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        ),
+      });
+  }
 };
+
+const addCourseLectures = async (req, res) => {
+  try {
+    const course = await courseService.addCourseLectures(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Lectures added successfully",
+      data: course,
+    });
+  } catch (error) {
+    if (
+      error.message == "Repository Error" ||
+      "Service Error" ||
+      "Validation Error"
+    )
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to add lectures",
+        err: error,
+      });
+  }
+};
+
+export { getAllCourses, createCourse, getCourseLectures, addCourseLectures };

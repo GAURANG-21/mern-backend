@@ -50,8 +50,11 @@ const course_schema = new mongoose.Schema({
     required: true,
   },
   createdBy: {
-    type: String,
-    required: [true, "Enter Course Creator"],
+    user_id: String,
+    createdBy: {
+      type: String,
+      required: [true, "Enter Course Creator"],
+    },
   },
   createdAt: {
     type: Date,
