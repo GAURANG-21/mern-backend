@@ -9,8 +9,9 @@ class UserService {
   async register(req, res) {
     try {
       const { name, password, email } = req.body;
+      const file = req.file;
       const user = await this.userRepository.register(
-        { name, email, password },
+        { name, email, password, file },
         res
       );
       return user;
@@ -149,22 +150,29 @@ class UserService {
 
   async addToPlaylist(req, res) {
     try {
-      const user = await this.userRepository.addToPlaylist(req, res)
+      const user = await this.userRepository.addToPlaylist(req, res);
       return user;
-      
     } catch (error) {
       throw error;
     }
   }
   async removeFromPlaylist(req, res) {
     try {
-      const user = await this.userRepository.removeFromPlaylist(req, res)
+      const user = await this.userRepository.removeFromPlaylist(req, res);
       return user;
     } catch (error) {
       throw error;
     }
   }
 
+  async updateProfilePicture(req, res) {
+    try {
+      const user = this.userRepository.updateProfilePicture(req, res);
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default UserService;

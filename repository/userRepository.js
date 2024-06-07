@@ -1,22 +1,28 @@
 import { StatusCodes } from "http-status-codes";
 import { User } from "../models/User.js";
-import {Course} from "../models/Course.js"
+import { Course } from "../models/Course.js";
 import AppError from "../utils/appError.js";
 import { sendEmail } from "../middlewares/sendEmail.js";
 import crypto from "crypto";
-import mongoose from "mongoose";
+import { dataURIParser } from "../utils/dataURI.js";
+import { deleteImage, uploadImage } from "../utils/uploadAndDeleteFiles.js";
 
 class UserRepository {
   async register(req, res) {
     try {
-      const { email } = req;
+      const { email, file } = req;
       const user = await User.findOne({ email });
       if (user) return { "User Already Exists!": user };
+      const dataURI = await dataURIParser(file);
+      const result = await uploadImage(dataURI.content);
+
+      delete req.file;
+
       const create_user = await User.create({
         ...req,
         avatar: {
-          public_id: "abcde",
-          url: "xyza",
+          public_id: result.public_id,
+          url: result.secure_url,
         },
       });
       return create_user;
@@ -162,52 +168,124 @@ class UserRepository {
   async addToPlaylist(req, res) {
     try {
       const user = await User.findById(req.user_id);
-      if(!user) throw new AppError("Repository Error", "User not found!", StatusCodes.BAD_REQUEST);
-      
+      if (!user)
+        throw new AppError(
+          "Repository Error",
+          "User not found!",
+          StatusCodes.BAD_REQUEST
+        );
+
       const course = await Course.findById(req.body.id);
-      if(!course) throw new AppError("Repository Error", "Course not found!", StatusCodes.BAD_REQUEST);
+      if (!course)
+        throw new AppError(
+          "Repository Error",
+          "Course not found!",
+          StatusCodes.BAD_REQUEST
+        );
 
-      const inPlaylist = user.playlist.find((currentValue)=>{
-        if(currentValue.course.toString()===course._id.toString()) return true;
-      } )
+      const inPlaylist = user.playlist.find((currentValue) => {
+        if (currentValue.course.toString() === course._id.toString())
+          return true;
+      });
 
-      if(inPlaylist) throw new AppError("Repository Error", "Already In playlist", StatusCodes.BAD_REQUEST);
-      
+      if (inPlaylist)
+        throw new AppError(
+          "Repository Error",
+          "Already In playlist",
+          StatusCodes.BAD_REQUEST
+        );
+
       user.playlist.push({
         course: course._id,
-        poster: course.poster.url
+        poster: course.poster.url,
       });
-      
+
       await user.save();
-  
+
       return user;
     } catch (error) {
-      if(error.message == "Repository Error") throw error;
+      if (error.message == "Repository Error") throw error;
       else
-      throw new AppError("Repository Error", "Unable to add the course to playlist", StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new AppError(
+          "Repository Error",
+          "Unable to add the course to playlist",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
     }
   }
 
-
-  async removeFromPlaylist (req, res) {
+  async removeFromPlaylist(req, res) {
     try {
       const user = await User.findById(req.user_id);
-      if(!user) throw new AppError("Repository Error", "User not found!", StatusCodes.BAD_REQUEST);
-      
-      const course = await Course.findById(req.body.id);
-      if(!course) throw new AppError("Repository Error", "Course not found!", StatusCodes.BAD_REQUEST);
+      if (!user)
+        throw new AppError(
+          "Repository Error",
+          "User not found!",
+          StatusCodes.BAD_REQUEST
+        );
 
-      const newPlaylist = user.playlist.filter((item)=>{
-        if(item.course.toString()!==course._id.toString()) return item;
-      })
+      const course = await Course.findById(req.body.id);
+      if (!course)
+        throw new AppError(
+          "Repository Error",
+          "Course not found!",
+          StatusCodes.BAD_REQUEST
+        );
+
+      const newPlaylist = user.playlist.filter((item) => {
+        if (item.course.toString() !== course._id.toString()) return item;
+      });
 
       user.playlist = newPlaylist;
       await user.save();
       return user;
     } catch (error) {
-      if(error.message == "Repository Error") throw error;
+      if (error.message == "Repository Error") throw error;
       else
-      throw new AppError("Repository Error", "Unable to remove the course from playlist", StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new AppError(
+          "Repository Error",
+          "Unable to remove the course from playlist",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+    }
+  }
+
+  async updateProfilePicture(req, res) {
+    try {
+      const user = await User.findById(req.user_id);
+      if (!user)
+        throw new AppError(
+          "Repository Error",
+          "User not found!",
+          StatusCodes.BAD_REQUEST
+        );
+
+      const file = req.file;
+      if (!file)
+        throw new AppError(
+          "Repository Error",
+          "No file uploaded",
+          StatusCodes.BAD_REQUEST
+        );
+
+      await deleteImage(user.avatar.public_id);
+      const dataURI = await dataURIParser(file);
+      const result = await uploadImage(dataURI.content);
+
+      user.avatar.public_id = result.public_id;
+      user.avatar.url = result.secure_url;
+
+      await user.save();
+
+      return user;
+    } catch (error) {
+      if (error.message == "Repository Error") throw error;
+      else
+        return new AppError(
+          "Repository Error",
+          "Unable to update profile picture",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
     }
   }
 }

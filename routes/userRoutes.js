@@ -15,12 +15,14 @@ import {
   resetPassword,
   addToPlaylist,
   removeFromPlaylist,
+  updateProfilePicture,
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
+import { singleUpload } from "../middlewares/fileHandle.js";
 
 const router = express.Router();
 
-router.route("/register").post(registerValidation, register);
+router.route("/register").post(singleUpload, registerValidation, register);
 router.route("/login").post(loginValidation, login);
 router.route("/logout").post(logout);
 router.route("/me").get(isAuthenticated, getMyProfile);
@@ -41,6 +43,8 @@ router
   .route("/removeFromPlaylist")
   .delete(isAuthenticated, addToPlaylistValidation, removeFromPlaylist);
 
-
+router
+  .route("/updateProfilePicture")
+  .put(singleUpload, isAuthenticated, updateProfilePicture);
 
 export default router;

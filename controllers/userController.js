@@ -279,6 +279,30 @@ const removeFromPlaylist = async (req, res) => {
   }
 };
 
+const updateProfilePicture = async (req, res) => {
+  try {
+    const user = await userService.updateProfilePicture(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Profile Picture updated successfully",
+      user,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to update profile picture",
+        err: error,
+      });
+  }
+};
+
 export {
   register,
   login,
@@ -288,5 +312,6 @@ export {
   forgetPassword,
   resetPassword,
   addToPlaylist,
-  removeFromPlaylist
+  removeFromPlaylist,
+  updateProfilePicture,
 };
