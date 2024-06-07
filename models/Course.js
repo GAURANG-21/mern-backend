@@ -60,6 +60,10 @@ const course_schema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
+  numOfVideos: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const Course = await mongoose.model("Course", course_schema);

@@ -88,6 +88,9 @@ class courseRepository {
           url: result.secure_url,
         },
       });
+
+      course.numOfVideos = course.lectures.length;
+
       await course.save();
       return course;
     } catch (error) {
@@ -99,6 +102,7 @@ class courseRepository {
       );
     }
   }
+
 }
 
 export default courseRepository;
