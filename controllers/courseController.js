@@ -60,6 +60,29 @@ const createCourse = async (req, res) => {
   }
 };
 
+const deleteCourse = async (req, res) => {
+  try {
+    await courseService.deleteCourse(req, res);
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Course deleted successfully",
+    });
+  } catch (error) {
+    if (error.message == "Repository Error" || "Non-Admin")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        explaination: error.explaination,
+        err: error,
+      });
+    else
+      res.status(Status.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to delete the course",
+      });
+  }
+};
+
 const getCourseLectures = async (req, res) => {
   try {
     const lectures = await courseService.getCourseLectures(req, res);
@@ -116,4 +139,35 @@ const addCourseLectures = async (req, res) => {
   }
 };
 
-export { getAllCourses, createCourse, getCourseLectures, addCourseLectures };
+const deleteCourseLecture = async (req, res) => {
+  try {
+    const course = await courseService.deleteCourseLecture(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Lecture deleted successfully",
+      course,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error" || "Non-Admin")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        explaination: error.explaination,
+        err: error,
+      });
+    else
+      res.status(Status.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to delete lecture in the course",
+      });
+  }
+};
+
+export {
+  getAllCourses,
+  createCourse,
+  deleteCourse,
+  getCourseLectures,
+  addCourseLectures,
+  deleteCourseLecture,
+};

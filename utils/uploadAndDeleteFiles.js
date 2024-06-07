@@ -22,3 +22,37 @@ export const uploadImage = async (file) => {
     console.error(error);
   }
 };
+
+export const uploadVideo = async (file) => {
+  const options = {
+    resource_type: "video",
+    use_filename: true,
+    unique_filename: false,
+    timeout: 1000 * 60 * 2,
+  };
+
+  try {
+    const result = await cloudinary.v2.uploader.upload(file, options);
+    return result;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deleteImage = async (pubilc_id) => {
+  try {
+    await cloudinary.v2.uploader.destroy(pubilc_id);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deleteVideo = async (public_id) => {
+  try {
+    await cloudinary.v2.uploader.destroy(public_id, {
+      resource_type: "video",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};

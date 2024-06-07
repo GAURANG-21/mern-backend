@@ -4,6 +4,8 @@ import {
   createCourse,
   getCourseLectures,
   addCourseLectures,
+  deleteCourse,
+  deleteCourseLecture,
 } from "../controllers/courseController.js";
 import { createCourseValidation } from "../middlewares/courses_validation.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
@@ -23,8 +25,13 @@ router
   );
 
 router
+  .route("/deleteCourse/:courseId")
+  .delete(isAuthenticated, isAdmin, deleteCourse);
+
+router
   .route("/course/:id")
   .get(isAuthenticated, getCourseLectures)
-  .post(singleUpload, isAuthenticated, isAdmin, addCourseLectures);
+  .post(singleUpload, isAuthenticated, isAdmin, addCourseLectures)
+  .delete(isAuthenticated, isAdmin, deleteCourseLecture);
 
 export default router;

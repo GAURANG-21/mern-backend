@@ -47,10 +47,18 @@ class courseService {
     }
   }
 
+  async deleteCourse(req, res) {
+    try {
+      await this.courseRepository.deleteCourse(req, res);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getCourseLectures(req, res) {
     try {
-      const course_id = req.params;
-      const lectures = await this.courseRepository.getAllLectures(
+      const { id: course_id } = req.params;
+      const lectures = await this.courseRepository.getCourseLectures(
         course_id,
         res
       );
@@ -66,7 +74,7 @@ class courseService {
       const course_id = req.params.id;
       const { title } = req.body;
       const file = req.file;
-      // console.log("User ID", user_id,"\nCourse ID", course_id, "\nTITLE", title, "\nFILE", file);
+      // console.log("User ID", user_id,"\nCourse ID", course_id, "\nTITLE", title, "\nFILE", req);
       if (!title || !file)
         throw new ServiceError(
           "Validation Error",
@@ -85,6 +93,15 @@ class courseService {
       )
         throw error;
       else throw new ServiceError();
+    }
+  }
+
+  async deleteCourseLecture(req, res) {
+    try {
+      const course = await this.courseRepository.deleteCourseLecture(req, res);
+      return course;
+    } catch (error) {
+      throw error;
     }
   }
 }

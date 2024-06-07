@@ -2,7 +2,13 @@ import { StatusCodes } from "http-status-codes";
 import { Course } from "../models/Course.js";
 import AppError from "../utils/appError.js";
 import { dataURIParser } from "../utils/dataURI.js";
-import { uploadImage } from "../utils/uploadAndDeleteFiles.js";
+import {
+  deleteImage,
+  deleteVideo,
+  uploadImage,
+  uploadVideo,
+} from "../utils/uploadAndDeleteFiles.js";
+import { User } from "../models/User.js";
 
 class courseRepository {
   async getAllCourses(req, res) {
@@ -21,7 +27,7 @@ class courseRepository {
   async createCourse(obj, res) {
     try {
       const dataURI = await dataURIParser(obj.file);
-      console.log(dataURI);
+      // console.log(dataURI);
       const result = await uploadImage(dataURI.content);
       obj.poster = {
         url: result.secure_url,
@@ -33,6 +39,45 @@ class courseRepository {
     } catch (error) {
       console.log(error);
       throw new AppError("Repository Error", error.errors.description, 500);
+    }
+  }
+
+  async deleteCourse(req, res) {
+    try {
+      const { courseId } = req.params;
+      const userId = req.user_id;
+
+      const course = await Course.findById(courseId);
+      if (!course)
+        throw new AppError(
+          "Repository Error",
+          "Course not found!",
+          StatusCodes.BAD_REQUEST
+        );
+
+      const user = await User.findById(userId);
+      if (user._id.toString() !== course.createdBy.user_id.toString())
+        throw (
+          ("Non-Admin",
+          "You are not the creator of this course!",
+          StatusCodes.CONFLICT)
+        );
+
+      await deleteImage(course.poster.poster_id);
+
+      course.lectures.forEach(async (element) => {
+        await deleteVideo(element.videos.public_id);
+      });
+
+      await Course.deleteOne(course._id);
+    } catch (error) {
+      if (error.message == "Non-Admin" || error.message == "Repository Error")
+        throw error;
+      throw new AppError(
+        "Repository Error",
+        "Failed to delete course from repository layer",
+        500
+      );
     }
   }
 
@@ -49,6 +94,7 @@ class courseRepository {
       await course.save();
       return course.lectures;
     } catch (error) {
+      console.log(error);
       if (error.message == "Repository Error") throw error;
       throw new AppError(
         "Repository Error",
@@ -78,8 +124,8 @@ class courseRepository {
         );
 
       const dataURI = await dataURIParser(file);
-
-      const result = await uploadImage(dataURI.content);
+      // console.log(dataURI.content)
+      const result = await uploadVideo(dataURI.content);
 
       course.lectures.push({
         title,
@@ -103,6 +149,59 @@ class courseRepository {
     }
   }
 
+  async deleteCourseLecture(req, res) {
+    try {
+      const { id: courseId } = req.params;
+      const { lectureId } = req.query;
+      const userId = req.user_id;
+
+      const course = await Course.findById(courseId);
+      if (!course)
+        throw new AppError(
+          "Repository Error",
+          "Course not found!",
+          StatusCodes.BAD_REQUEST
+        );
+
+      if (course.createdBy.user_id !== userId)
+        throw new AppError(
+          "Non-Admin",
+          "You are not the creator of this course",
+          StatusCodes.CONFLICT
+        );
+
+      const item = course.lectures.find((element) => {
+        if (element._id.toString() === lectureId) return element;
+      });
+
+      if (!item)
+        throw new AppError(
+          "Repository Error",
+          "Lecture not found!",
+          StatusCodes.BAD_REQUEST
+        );
+
+      await deleteVideo(item.videos.public_id);
+
+      course.lectures = course.lectures.filter((item) => {
+        if (item._id.toString() !== lectureId) return item;
+      });
+
+      course.numOfVideos = course.lectures.length;
+      await course.save();
+
+      return course;
+    } catch (error) {
+      console.log(error);
+      if (error.message == "Repository Error" || "Non-Admin") throw error;
+      else
+        throw new AppError(
+          "Repository Error",
+          "Unable to delete lecture",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+    }
+  }
 }
 
 export default courseRepository;
