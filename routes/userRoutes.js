@@ -16,16 +16,23 @@ import {
   addToPlaylist,
   removeFromPlaylist,
   updateProfilePicture,
+  getAllUsers,
+  changeUserRole,
+  deleteMyProfile,
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 import { singleUpload } from "../middlewares/fileHandle.js";
+import { isAdmin } from "../middlewares/isAdmin.js";
 
 const router = express.Router();
 
 router.route("/register").post(singleUpload, registerValidation, register);
 router.route("/login").post(loginValidation, login);
 router.route("/logout").post(logout);
-router.route("/me").get(isAuthenticated, getMyProfile);
+router
+  .route("/me")
+  .get(isAuthenticated, getMyProfile)
+  .delete(isAuthenticated, deleteMyProfile);
 router
   .route("/updateProfile")
   .put(isAuthenticated, updateProfileValidation, updateProfile);
@@ -46,5 +53,12 @@ router
 router
   .route("/updateProfilePicture")
   .put(singleUpload, isAuthenticated, updateProfilePicture);
+
+router.route("/admin/getAllUsers").get(isAuthenticated, isAdmin, getAllUsers);
+
+router
+  .route("/admin/user/:id")
+  .put(isAuthenticated, isAdmin, changeUserRole)
+  .delete();
 
 export default router;

@@ -173,6 +173,32 @@ class UserService {
       throw error;
     }
   }
+
+  async getAllUsers(req, res) {
+    try {
+      const users = await this.userRepository.getAllUsers(req, res);
+      return users;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async changeUserRole(req, res) {
+    try {
+      const user = await this.userRepository.changeUserRole(req, res);
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteMyProfile(req, res) {
+    try {
+      await this.userRepository.deleteMyProfile(req, res);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default UserService;

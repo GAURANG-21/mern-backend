@@ -18,7 +18,7 @@ const register = async (req, res) => {
         httpOnly: true,
         sameSite: true,
       };
-      console.log("Token received is : ", token);
+      // console.log("Token received is : ", token);
       return res.status(StatusCodes.OK).cookie("token", token, options).json({
         success: true,
         message: "User registered successfully",
@@ -303,6 +303,83 @@ const updateProfilePicture = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await userService.getAllUsers(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Users fetched successfully",
+      users,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to fetch all users",
+        err: error,
+      });
+  }
+};
+
+const changeUserRole = async (req, res) => {
+  try {
+    const user = await userService.changeUserRole(req, res);
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "User role updated successfully",
+      user,
+    });
+  } catch (error) {
+    if (error.message == "Repository Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to change the user role",
+        err: error,
+      });
+  }
+};
+
+const deleteMyProfile = async (req, res) => {
+  try {
+    await userService.deleteMyProfile(req, res);
+    res
+      .status(StatusCodes.OK)
+      .cookie("token", null, {
+        expires: new Date(Date.now()),
+        maxAge: 0, // Optional: Ensures the cookie is immediately expired
+      })
+      .json({
+        success: true,
+        message: "Profile deleted successfully",
+      });
+  } catch (error) {
+    if (error.message == "Repository Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        err: error,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Unable to delete the profile",
+        err: error,
+      });
+  }
+};
+
 export {
   register,
   login,
@@ -314,4 +391,7 @@ export {
   addToPlaylist,
   removeFromPlaylist,
   updateProfilePicture,
+  getAllUsers,
+  changeUserRole,
+  deleteMyProfile,
 };

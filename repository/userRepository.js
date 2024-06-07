@@ -288,6 +288,63 @@ class UserRepository {
         );
     }
   }
+
+  async getAllUsers(req, res) {
+    try {
+      const users = await User.find().select("-User.findOne(req.user_id)");
+      return users;
+    } catch (error) {
+      throw new AppError(
+        "Repository Error",
+        "Unable to fetch all users",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async changeUserRole(req, res) {
+    try {
+      const user_id = req.params.id;
+      const user = await User.findById(user_id);
+      if (!user)
+        throw new AppError(
+          "Repository Error",
+          "User not found",
+          StatusCodes.BAD_REQUEST
+        );
+
+      if (user.role === "admin") user.role = "user";
+      else user.role = "admin";
+
+      await user.save();
+
+      return user;
+    } catch (error) {
+      if (error.message == "Repository Error") throw error;
+      else
+        throw new AppError(
+          "Repository Error",
+          "Unable to change user role",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+    }
+  }
+
+  async deleteMyProfile(req, res) {
+    try {
+      const user = await User.findById(req.user_id);
+
+      await deleteImage(user.avatar.public_id);
+      await user.deleteOne({ _id: req.user_id });
+    } catch (error) {
+      console.log(error);
+      throw new AppError(
+        "Repository Error",
+        "Unable to delete the profile",
+        StatusCodes.BAD_REQUEST
+      );
+    }
+  }
 }
 
 export default UserRepository;
