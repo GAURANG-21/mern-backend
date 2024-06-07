@@ -13,6 +13,10 @@ const payment_schema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
 });
 
 const Payment = await mongoose.model("Payment", payment_schema);

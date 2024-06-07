@@ -109,3 +109,67 @@ export const paymentVerification = async (req, res) => {
 export const getRazorpayApiKey = (req, res) => {
   res.json({ key: process.env.RAZORPAY_API_KEY });
 };
+
+export const cancelSubscription = async (req, res) => {
+  try {
+    const user = await User.findById(req.user_id);
+    if (!user)
+      throw new AppError(
+        "Payment Repository Error",
+        "User not found!",
+        StatusCodes.BAD_REQUEST
+      );
+
+    const subscription_id = user.subscription.id;
+    if (!subscription_id && user.subscription.status != "created")
+      throw new AppError(
+        "Payment Repository Error",
+        "You haven't subscribed to the course",
+        StatusCodes.BAD_REQUEST
+      );
+
+    let refund = false;
+
+    await instance.subscriptions.cancel(subscription_id);
+
+    const payment = await Payment.findOne({
+      razorpay_order_id: subscription_id,
+    });
+
+    const gap = Date.now() - payment.createdAt;
+    const refundTime = 1000 * 60 * 60 * 24 * process.env.REFUND_DAYS;
+
+    if (refundTime >= gap) {
+      refund = true;
+      await instance.payments.refund(payment.razorpay_payment_id);
+    }
+
+    await Payment.deleteOne({
+      razorpay_order_id: subscription_id,
+    });
+
+    user.subscription.id = undefined;
+    user.subscription.status = undefined;
+    await user.save();
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message:
+        "Subscription cancelled successfully" + refund
+          ? " and you will receive the refund in 7 days"
+          : "and not refunded due to refund time",
+    });
+  } catch (error) {
+    if (error.message == "Payment Repository Error")
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    else
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Issues while cancelling the subscription",
+        err: { error },
+      });
+  }
+};
