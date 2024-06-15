@@ -11,6 +11,7 @@ import { createCourseValidation } from "../middlewares/courses_validation.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 import { isAdmin } from "../middlewares/isAdmin.js";
 import { singleUpload } from "../middlewares/fileHandle.js";
+import { isSubscriberValidation } from "../middlewares/users_validation.js";
 
 const router = express.Router();
 router.route("/getAllCourses").get(getAllCourses);
@@ -30,7 +31,7 @@ router
 
 router
   .route("/course/:id")
-  .get(isAuthenticated, getCourseLectures)
+  .get(isAuthenticated, isSubscriberValidation, getCourseLectures)
   .post(singleUpload, isAuthenticated, isAdmin, addCourseLectures)
   .delete(isAuthenticated, isAdmin, deleteCourseLecture);
 
