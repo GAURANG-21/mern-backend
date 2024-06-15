@@ -4,6 +4,7 @@ import config from "./config/config.js";
 import routerCourse from "./routes/courseRoutes.js";
 import routerUser from "./routes/userRoutes.js";
 import paymentRoute from "./routes/paymentRoutes.js";
+import otherRoute from "./routes/otherRoutes.js";
 import { connectDB, disconnectDB } from "./config/database.js";
 import cookieParser from "cookie-parser";
 import Razorpay from "razorpay";
@@ -24,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/v1", routerCourse);
 app.use("/api/v1", routerUser);
 app.use("/api/v1", paymentRoute);
+app.use("/api/v1", otherRoute);
 
 app.listen(config.PORT, () => {
   console.log(`Server is running at port ${config.PORT}`);
