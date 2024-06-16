@@ -13,7 +13,18 @@ import { User } from "../models/User.js";
 class courseRepository {
   async getAllCourses(req, res) {
     try {
-      const courses = await Course.find().select("-lectures");
+      const keyword = req.query.keyword || "";
+      const category = req.query.category || "";
+      const courses = await Course.find({
+        title:{
+          $regex: keyword,
+          $options: "i",
+        },
+        category:{
+          $regex: category,
+          $options: "i",
+        }
+      }).select("-lectures");
       return courses;
     } catch (error) {
       throw new AppError(
@@ -57,10 +68,10 @@ class courseRepository {
 
       const user = await User.findById(userId);
       if (user._id.toString() !== course.createdBy.user_id.toString())
-        throw (
-          ("Non-Admin",
+        throw new AppError(
+          "Non-Admin",
           "You are not the creator of this course!",
-          StatusCodes.CONFLICT)
+          StatusCodes.CONFLICT
         );
 
       await deleteImage(course.poster.poster_id);
@@ -192,7 +203,6 @@ class courseRepository {
 
       return course;
     } catch (error) {
-      console.log(error);
       if (error.message == "Repository Error" || "Non-Admin") throw error;
       else
         throw new AppError(

@@ -101,7 +101,7 @@ class UserService {
     try {
       const { email } = req.body;
       if (!email)
-        throw new AppError(
+        throw new ServiceError(
           "Service Error",
           "Email not found",
           StatusCodes.BAD_REQUEST
@@ -109,7 +109,7 @@ class UserService {
       const user = await this.userRepository.forgetPassword(email, res);
       return user;
     } catch (error) {
-      if (error.message == "Repository Error") throw error;
+      if (error.message == "Repository Error" || error.message == "Service Error") throw error;
       else
         throw new ServiceError(
           "Service Error",

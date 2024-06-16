@@ -182,7 +182,7 @@ const updateProfile = async (req, res) => {
 
 const forgetPassword = async (req, res) => {
   try {
-    const user = await userService.forgetPassword(req.body, res);
+    const user = await userService.forgetPassword(req, res);
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Password reset link sent successfully",
