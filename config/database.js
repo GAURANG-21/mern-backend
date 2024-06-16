@@ -1,15 +1,16 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 
-dotenv.config();
-
-const connectDB = async () => {
+const connectWithRetry = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+    });
     console.log("MongoDB connected...");
   } catch (err) {
     console.error(err.message);
-    process.exit(1);
+    console.log("Retrying connection in 5 seconds...");
+    setTimeout(connectWithRetry, 5000);
   }
 };
 
@@ -34,4 +35,4 @@ mongoose.connection.on("disconnected", () => {
   console.log("Mongoose disconnected from DB");
 });
 
-export { connectDB, disconnectDB };
+export { connectWithRetry as connectDB, disconnectDB };
