@@ -8,6 +8,8 @@ import otherRoute from "./routes/otherRoutes.js";
 import { connectDB, disconnectDB } from "./config/database.js";
 import cookieParser from "cookie-parser";
 import Razorpay from "razorpay";
+import nodecron from 'node-cron'
+import { Stats } from "./models/Stats.js";
 
 //* Making successful connection with database
 connectDB();
@@ -27,9 +29,27 @@ app.use("/api/v1", routerUser);
 app.use("/api/v1", paymentRoute);
 app.use("/api/v1", otherRoute);
 
+nodecron.schedule('0 0 0 1 * *',async()=>{
+  try {
+    await Stats.create({});
+  } catch (error) {
+    console.log(error);
+  }
+})
+
 app.listen(config.PORT, () => {
   console.log(`Server is running at port ${config.PORT}`);
 });
+
+const temp = async()=>{
+  const stat = await Stats.create({
+    views: 5,
+    subscriptions: 4,
+    users: 10
+  });
+}
+
+// temp();
 
 //* Graceful disconnection
 process.on("SIGINT", async () => {

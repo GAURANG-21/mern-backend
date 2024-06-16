@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Stats } from "./Stats.js";
 
 const course_schema = new mongoose.Schema({
   title: {
@@ -67,5 +68,18 @@ const course_schema = new mongoose.Schema({
 });
 
 const Course = await mongoose.model("Course", course_schema);
+
+Course.watch().on("change", async () => {
+  const stats = await Stats.find({}).sort({ createdAt: "desc" }).limit(1);
+  const course = await Course.find({});
+
+  let totalViews = 0;
+  for (let i = 0; i < course.length; i++) totalViews += course[i].views;
+
+  stats[0].views = totalViews;
+  stats[0].createdAt = new Date(Date.now());
+
+  await stats[0].save();
+});
 
 export { Course };

@@ -2,7 +2,8 @@ import mongoose, { Schema } from "mongoose";
 import validator from "email-validator";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import crypto from 'crypto'
+import crypto from "crypto";
+import { Stats } from "./Stats.js";
 
 const user_schema = new mongoose.Schema({
   name: {
@@ -73,13 +74,15 @@ user_schema.methods.comparePasswords = function (password) {
   return bcrypt.compareSync(password, this.password);
 };
 
-
-user_schema.methods.getResetToken = function(){
+user_schema.methods.getResetToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
-  this.ResetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-  this.ResetPasswordExpire = Date.now() + 1000*60*15; // 15 minutes
+  this.ResetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.ResetPasswordExpire = Date.now() + 1000 * 60 * 15; // 15 minutes
   return resetToken;
-}
+};
 
 // * Before saving the passwords to the datasave, hash them.
 // ! Not necessary to create a instance method for this.
@@ -90,4 +93,14 @@ user_schema.pre("save", async function () {
 });
 
 const User = await mongoose.model("User", user_schema);
+
+User.watch().on("change", async () => {
+  const stats = await Stats.find({}).sort({ createdAt: "desc" }).limit(1);
+  const subscription = User.find({ "subscription.status": "active" });
+  stats[0].subscriptions = subscription.length;
+  stats[0].users = await User.countDocuments();
+  stats[0].createdAt = new Date(Date.now());
+
+  await stats[0].save();
+});
 export { User };
