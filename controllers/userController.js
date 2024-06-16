@@ -60,7 +60,8 @@ const login = async (req, res) => {
       const options = {
         expiresIn: new Date(Date.now() + 1000 * 60 * 60 * 60 * 24 * 15),
         httpOnly: true,
-        sameSite: true,
+        sameSite: "none",
+        secure: true,
       };
       // console.log(token);
       res.status(StatusCodes.ACCEPTED).cookie("token", token, options).json({
@@ -100,7 +101,12 @@ const logout = async (req, res) => {
 
     res
       .status(StatusCodes.ACCEPTED)
-      .cookie("token", "", { expires: new Date(Date.now()) })
+      .cookie("token", "", {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+        sameSite: true,
+        secure: true,
+      })
       .json({
         success: true,
         message,

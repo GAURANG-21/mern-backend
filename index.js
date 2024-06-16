@@ -8,8 +8,9 @@ import otherRoute from "./routes/otherRoutes.js";
 import { connectDB, disconnectDB } from "./config/database.js";
 import cookieParser from "cookie-parser";
 import Razorpay from "razorpay";
-import nodecron from 'node-cron'
+import nodecron from "node-cron";
 import { Stats } from "./models/Stats.js";
+import cors from "cors";
 
 //* Making successful connection with database
 connectDB();
@@ -23,33 +24,36 @@ const app = express();
 
 app.use(cookieParser());
 app.use(bodyParser.json());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    methods: ["GET", "POST", "DELETE", "PUT"],
+  })
+);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/v1", routerCourse);
 app.use("/api/v1", routerUser);
 app.use("/api/v1", paymentRoute);
 app.use("/api/v1", otherRoute);
 
-nodecron.schedule('0 0 0 1 * *',async()=>{
+nodecron.schedule("0 0 0 1 * *", async () => {
   try {
     await Stats.create({});
   } catch (error) {
     console.log(error);
   }
-})
+});
 
 app.listen(config.PORT, () => {
   console.log(`Server is running at port ${config.PORT}`);
 });
 
-const temp = async()=>{
-  const stat = await Stats.create({
-    views: 5,
-    subscriptions: 4,
-    users: 10
-  });
-}
-
-// temp();
+app.get("/", (req, res) =>
+  res.send(
+    `<h1>Server is working!. Click on the <a href=${process.env.FRONTEND_URL}>link</a> to visit frontend.</h1>`
+  )
+);
 
 //* Graceful disconnection
 process.on("SIGINT", async () => {
